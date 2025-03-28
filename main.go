@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
-    "fmt"
+
 	"mproxy/config"
 	"mproxy/log"
 	"mproxy/service"
@@ -15,7 +16,7 @@ import (
 func init() {
 	var (
 		configPath string
-		mark string
+		mark       string
 	)
 	flag.StringVar(&configPath, "config_path", "", "配置文件路径")
 	flag.StringVar(&mark, "mark", "", "标记")
@@ -24,8 +25,8 @@ func init() {
 	fmt.Println(configPath)
 
 	config.Load(configPath)
-	fmt.Println(filepath.Join(config.ConfData.LogDir, config.ServiceName, mark ))
-	log.Init(filepath.Join(config.ConfData.LogDir, config.ServiceName, mark ))
+	fmt.Println(filepath.Join(config.ConfData.LogDir, config.ServiceName, mark))
+	log.Init(filepath.Join(config.ConfData.LogDir, config.ServiceName, mark))
 	log.Infof("%s服务启动", config.ServiceName)
 	go gohttp()
 }

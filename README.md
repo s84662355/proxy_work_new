@@ -3,3 +3,12 @@
 ```shell
 go build -tags "scheduled_tasks"    -o bin/scheduled_tasks
 ```
+
+
+
+## 代码格式化
+```shell
+ gofumpt -l -w .
+```
+
+ 

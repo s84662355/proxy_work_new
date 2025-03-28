@@ -5,6 +5,6 @@ package config
 
 const ServiceName = "scheduled_tasks"
 
-type serviceConf struct{
-	TaskCount  int `json:"task_count" `
+type serviceConf struct {
+	TaskCount int `json:"task_count" `
 }

@@ -4,14 +4,22 @@ go 1.23.1
 
 require (
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
+	github.com/redis/go-redis/v9 v9.7.3
 	github.com/spf13/viper v1.20.1
 	go.uber.org/zap v1.27.0
 	golang.org/x/sys v0.31.0
+	gorm.io/driver/mysql v1.5.7
+	gorm.io/gorm v1.25.12
 )
 
 require (
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
+	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/lestrrat-go/strftime v1.1.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
