@@ -22,7 +22,7 @@ var zaploger *zap.Logger
 
 func Init(filepath string) {
 	// 设置一些基本日志格式 具体含义还比较好理解，直接看zap源码也不难懂
-	encoder = zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
+	encoder = zapcore.NewJSONEncoder(zapcore.EncoderConfig{
 		MessageKey:  "msg",
 		LevelKey:    "level",
 		EncodeLevel: zapcore.CapitalLevelEncoder,
@@ -64,7 +64,7 @@ func Init(filepath string) {
 		return lvl == zapcore.FatalLevel
 	})
 
-	isDay := true
+	isDay := false
 
 	// 获取 info、warn日志文件的io.Writer 抽象 getWriter() 在下方实现
 	infoWriter := getWriter(filepath+"/info", isDay)
@@ -99,7 +99,7 @@ func getWriter(filename string, isDay bool) io.Writer {
 			filename+"_%Y-%m-%d.log", // 没有使用go风格反人类的format格式
 			rotatelogs.WithLinkName(filename),
 			rotatelogs.WithMaxAge(time.Hour*24*3),
-			rotatelogs.WithRotationTime(time.Hour*24),
+			rotatelogs.WithRotationTime(time.Hour),
 		)
 		if err != nil {
 			panic(err)
