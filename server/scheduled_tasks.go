@@ -1,10 +1,10 @@
 //go:build scheduled_tasks
 // +build scheduled_tasks
 
-package service
+package server
 
 import (
-	"mproxy/service/scheduled_tasks"
+	"mproxy/server/scheduled_tasks"
 )
 
 func Start() error {

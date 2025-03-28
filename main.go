@@ -10,7 +10,7 @@ import (
 
 	"mproxy/config"
 	"mproxy/log"
-	"mproxy/service"
+	"mproxy/server"
 )
 
 func init() {
@@ -32,12 +32,12 @@ func init() {
 }
 
 func main() {
-	if err := service.Start(); err != nil {
+	if err := server.Start(); err != nil {
 		log.Fatalf("启动服务%s失败 err=%+v", config.ServiceName, err)
 		return
 	}
 
-	defer service.Stop()
+	defer server.Stop()
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, os.Kill)
