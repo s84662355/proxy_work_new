@@ -1,5 +1,7 @@
 package model
 
+const VsIPCountryInfoTableName = "vs_ip_country_info"
+
 // 虚拟服务IP国家信息表
 type VsIPCountryInfo struct {
 	ID                  uint64 `gorm:"column:id;type:bigint(20) unsigned;primary_key;AUTO_INCREMENT" json:"id"`
@@ -58,5 +60,5 @@ type VsIPCountryInfo struct {
 }
 
 func (m *VsIPCountryInfo) TableName() string {
-	return "vs_ip_country_info"
+	return VsIPCountryInfoTableName
 }

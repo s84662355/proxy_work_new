@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const VsIPTransitDynamicTableName = "vs_ip_transit_dynamic"
+
 // 动态ip用户数据表
 type VsIPTransitDynamic struct {
 	ID                     int64      `gorm:"column:id;type:bigint(20);primary_key;AUTO_INCREMENT" json:"id"`                                     // 主键id
@@ -28,7 +30,7 @@ type VsIPTransitDynamic struct {
 }
 
 func (m *VsIPTransitDynamic) TableName() string {
-	return "vs_ip_transit_dynamic"
+	return VsIPTransitDynamicTableName
 }
 
 type FlowRecordData struct {

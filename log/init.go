@@ -2,6 +2,7 @@ package log
 
 import (
 	"io"
+	"os"
 	"time"
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
@@ -22,46 +23,23 @@ var zaploger *zap.Logger
 
 func Init(filepath string) {
 	// 设置一些基本日志格式 具体含义还比较好理解，直接看zap源码也不难懂
+
 	encoder = zapcore.NewJSONEncoder(zapcore.EncoderConfig{
 		MessageKey:  "msg",
 		LevelKey:    "level",
 		EncodeLevel: zapcore.CapitalLevelEncoder,
-		CallerKey:   "caller",
+		CallerKey:   "file",
 		TimeKey:     "ts",
 		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendString(t.Format("2006-01-02 15:04:05"))
 		},
-		LineEnding: "",
-		//	EncodeCaller: zapcore.ShortCallerEncoder,
-		EncodeCaller: callerEncodeCaller,
+		SkipLineEnding: false,
+		LineEnding:     "",
+		FunctionKey:    "func",
+		EncodeCaller:   zapcore.FullCallerEncoder,
 		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendInt64(int64(d) / 1000000)
 		},
-	})
-	infoLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl == zapcore.InfoLevel
-	})
-	warnLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl == zapcore.WarnLevel
-	})
-	errorLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl == zapcore.ErrorLevel
-	})
-
-	debugLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl == zapcore.DebugLevel
-	})
-
-	dPanicLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl == zapcore.DPanicLevel
-	})
-
-	panicLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl == zapcore.PanicLevel
-	})
-
-	fatalLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl == zapcore.FatalLevel
 	})
 
 	isDay := false
@@ -77,16 +55,28 @@ func Init(filepath string) {
 
 	// 最后创建具体的Logger
 	core := zapcore.NewTee(
-		zapcore.NewCore(encoder, zapcore.AddSync(infoWriter), infoLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(warnWriter), warnLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(errorWriter), errorLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(debugWriter), debugLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(dPanicWriter), dPanicLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(panicWriter), panicLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(fatalWriter), fatalLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(infoWriter), zapcore.InfoLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(warnWriter), zapcore.WarnLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(errorWriter), zapcore.ErrorLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(debugWriter), zapcore.DebugLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(dPanicWriter), zapcore.DPanicLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(panicWriter), zapcore.PanicLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(fatalWriter), zapcore.FatalLevel),
+
+		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapcore.InfoLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapcore.WarnLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapcore.ErrorLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapcore.DebugLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapcore.DPanicLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapcore.PanicLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapcore.FatalLevel),
 	)
 
-	zaploger = zap.New(core, zap.AddCaller())
+	zaploger = zap.New(
+		core,
+		zap.AddCaller(),
+		zap.AddCallerSkip(1),
+	)
 }
 
 func getWriter(filename string, isDay bool) io.Writer {

@@ -23,12 +23,10 @@ func gohttp() {
 		}
 		go func() {
 			for {
-				log.Debug("端口:", ln.Addr().(*net.TCPAddr).Port)
-				log.Debug("metrics: ", fmt.Sprintf("http://127.0.0.1:%d/metrics", ln.Addr().(*net.TCPAddr).Port))
-				log.Debug("pprof: ", fmt.Sprintf("http://127.0.0.1:%d/debug/pprof", ln.Addr().(*net.TCPAddr).Port))
-				select {
-				case <-time.After(time.Minute):
-				}
+				log.Debug(fmt.Sprint("端口:", ln.Addr().(*net.TCPAddr).Port))
+				log.Debug(fmt.Sprint("metrics: ", fmt.Sprintf("http://127.0.0.1:%d/metrics", ln.Addr().(*net.TCPAddr).Port)))
+				log.Debug(fmt.Sprint("pprof: ", fmt.Sprintf("http://127.0.0.1:%d/debug/pprof", ln.Addr().(*net.TCPAddr).Port)))
+				<-time.After(30 * 60 * time.Second)
 			}
 		}()
 

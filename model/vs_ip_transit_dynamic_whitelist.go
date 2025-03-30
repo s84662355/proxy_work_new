@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+const VsIPTransitDynamicWhitelistTableName = "vs_ip_transit_dynamic_whitelist"
+
 // 白名单表
 type VsIPTransitDynamicWhitelist struct {
 	ID             int64     `gorm:"column:id;type:bigint(20);primary_key;AUTO_INCREMENT" json:"id"` // 白名单id
@@ -15,5 +17,5 @@ type VsIPTransitDynamicWhitelist struct {
 }
 
 func (m *VsIPTransitDynamicWhitelist) TableName() string {
-	return "vs_ip_transit_dynamic_whitelist"
+	return VsIPTransitDynamicWhitelistTableName
 }

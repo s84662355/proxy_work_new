@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const VsIPFlowRecordsTableName = "vs_ip_flow_records"
+
 type VsIPFlowRecords struct {
 	ID           uint64    `gorm:"column:id;type:bigint(20);primary_key;AUTO_INCREMENT" json:"id"`
 	RecordID     string    `gorm:"column:record_id;type:varchar(100);NOT NULL" json:"record_id"` // 唯一索引，代码里面生成
@@ -28,6 +30,6 @@ type VsIPFlowRecords struct {
 }
 
 func (m VsIPFlowRecords) TableName() string {
-	return "vs_ip_flow_records"
+	return VsIPFlowRecordsTableName
 
 }

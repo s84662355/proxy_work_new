@@ -4,92 +4,136 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
+	"time"
 
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"mproxy/common"
 	"mproxy/constant"
 	"mproxy/log"
 	"mproxy/model"
 )
 
 // /批量更新子账号缓存
-func BatchUpdateDynamicAccountData(ctx context.Context) (RowsAffected int64, err error) {
-	var (
-		gormDB                                     = common.GetMysqlDB()
-		results []*model.VsIPTransitDynamicAccount = nil
-	)
+func BatchUpdateDynamicAccountDataCache(
+	ctx context.Context,
+	db *gorm.DB,
+	rdb *redis.Client,
+) (RowsAffected int64, err error) {
+	var results []*model.VsIPTransitDynamicAccount = nil
+	result := db.Model(&model.VsIPTransitDynamicAccount{}).FindInBatches(
+		&results,
+		constant.BatcheUpdateDynamicAccountDataCacheSize,
+		func(tx *gorm.DB, batch int) error {
+			for c := range slices.Chunk(results, 20) {
+				///设置 DynamicAccount 缓存
+				if err := UpdateDynamicAccountDataCachebyRedisPipe(ctx, rdb, c); err != nil {
+					log.Error("[service] BatchUpdateDynamicAccountDataCache 设置数据 执行错误", zap.Any("error", err))
+				}
 
-	// 处理记录，批处理大小为100
-	result := gormDB.Model(&model.VsIPTransitDynamicAccount{}).FindInBatches(&results, constant.BatcheUpdateDynamicAccountDataCacheSize, func(tx *gorm.DB, batch int) error {
-		///设置 DynamicAccount 缓存
-		if err := UpdateDynamicAccountDatabyRedisPipe(ctx, results); err != nil {
-			log.Errorf("[service] BatchUpdateDynamicAccountTraffic 设置数据 执行错误 err:%+v", err)
-		}
+				if err := ExistsFlowDynamicAccountIDbyRedisPipe(ctx, rdb, results); err != nil {
+					log.Error("[service] BatchUpdateDynamicAccountDataCache Exists  执行错误 ", zap.Any("error", err))
+				}
 
-		aids, err := ExistsFlowDynamicAccountIDbyRedisPipe(ctx, results)
-		if err != nil {
-			log.Errorf("[service] BatchUpdateDynamicAccountTraffic Exists   执行错误 err:%+v", err)
-		}
-
-		if len(aids) > 0 {
-			// 批量添加成员到集合
-			_, err := common.GetRedisDB().SAdd(ctx, constant.DynamicAccountIDFlowRedisQueueSet, aids...).Result()
-			if err != nil {
-				log.Errorf("[service] SAddHaveFlowDynamicAccountIDToQueueSet redis SAdd %s 执行错误 err:%+v", constant.DynamicAccountIDFlowRedisQueueSet, err)
 			}
-		}
 
-		return nil
-	})
+			return nil
+		})
 	return result.RowsAffected, result.Error
 }
 
-func UpdateDynamicAccountDatabyRedisPipe(ctx context.Context, results []*model.VsIPTransitDynamicAccount) error {
-	_, err := common.GetRedisDB().Pipelined(ctx, func(pipe redis.Pipeliner) error {
-		for _, v := range results {
-			if v.IsDelete == "0" {
-				accountData, err := json.Marshal(v)
-				if err != nil {
-					log.Errorf("[service] UpdateDynamicAccountDataOnRedisPipe json 解析失败 数据%+v err:%+v", v, err)
-					continue
+// 使用redis管道批量设置子账号缓存
+func UpdateDynamicAccountDataCachebyRedisPipe(
+	ctx context.Context,
+	rdb *redis.Client,
+	results []*model.VsIPTransitDynamicAccount,
+) error {
+	_, err := rdb.Pipelined(
+		ctx,
+		func(pipe redis.Pipeliner) error {
+			for _, v := range results {
+				if v.IsDelete == "0" {
+					accountData, err := json.Marshal(v)
+					if err != nil {
+						log.Error("[service] UpdateDynamicAccountDataCachebyRedisPipe json 解析失败", zap.Any("account", v), zap.Any("error", err))
+						continue
+					}
+					s := string(accountData)
+					pipe.Set(
+						ctx,
+						constant.DynamicAccountDataCacheRedisKeyPrefix+v.Username,
+						s,
+						constant.DynamicAccountDataCacheRedisTtl,
+					)
+					pipe.Set(
+						ctx,
+						fmt.Sprintf("%s%d", constant.DynamicAccountDataCacheByIdRedisKeyPrefix, v.ID),
+						s,
+						constant.DynamicAccountDataCacheRedisTtl,
+					)
+
 				}
-				pipe.Set(ctx, constant.DynamicAccountDataCacheRedisKeyPrefix+v.Username, string(accountData), constant.DynamicAccountDataCacheRedisTtl)
-				pipe.Set(ctx, fmt.Sprintf("%s%d", constant.DynamicAccountDataCacheByIdRedisKeyPrefix, v.ID), string(accountData), constant.DynamicAccountDataCacheRedisTtl)
-
 			}
-		}
-
-		return nil
-	})
+			return nil
+		})
 
 	if err == nil {
 		return nil
 	}
 
-	return fmt.Errorf("UpdateDynamicAccountDataOnRedisPipe %+v", err)
+	return fmt.Errorf("UpdateDynamicAccountDataCachebyRedisPipe %+v", err)
 }
 
-func ExistsFlowDynamicAccountIDbyRedisPipe(ctx context.Context, results []*model.VsIPTransitDynamicAccount) ([]interface{}, error) {
-	existsCmds := map[int64]*redis.IntCmd{}
-	_, err := common.GetRedisDB().Pipelined(ctx, func(pipe redis.Pipeliner) error {
-		for _, v := range results {
-			existsCmd := pipe.Exists(ctx, fmt.Sprintf("%s%d", constant.DynamicAccountRedisFlowPrefix, v.ID))
-			existsCmds[v.ID] = existsCmd
-		}
-		return nil
-	})
+// 使用redis管道批量判断子账号的流量是否存在
+func ExistsFlowDynamicAccountIDbyRedisPipe(
+	ctx context.Context,
+	rdb *redis.Client,
+	results []*model.VsIPTransitDynamicAccount,
+) error {
+	///后面可以试试使用MGet一次性获取所有key的值
+	incrByCmds := map[int64]*redis.IntCmd{}
+	_, err := rdb.Pipelined(
+		ctx,
+		func(pipe redis.Pipeliner) error {
+			for _, v := range results {
+				incrByCmd := pipe.IncrBy(
+					ctx,
+					fmt.Sprintf("%s%d", constant.DynamicAccountRedisFlowPrefix, v.ID),
+					0,
+				)
+				incrByCmds[v.ID] = incrByCmd
+			}
+			return nil
+		})
 	if err != nil {
 		err = fmt.Errorf("ExistsFlowDynamicAccountIDbyRedisPipe redis Pipelined Exists 执行错误 err:%+v", err)
+		return err
 	}
 
-	var aids []interface{} = nil
-	for k, existsCmd := range existsCmds {
-		result, err := existsCmd.Result()
+	var elements []redis.Z = nil
+	///判断key是否存在并且值大于0
+	for k, incrByCmd := range incrByCmds {
+		result, err := incrByCmd.Result()
 		if err == nil && result > 0 {
-			aids = append(aids, k)
+			elements = append(elements, redis.Z{
+				Score:  float64(time.Now().Unix()),
+				Member: k,
+			})
 		}
 	}
 
-	return aids, err
+	if len(elements) == 0 {
+		return nil
+	}
+
+	if _, err := rdb.ZAddNX(
+		ctx,
+		constant.DynamicAccountIDFlowRedisQueueSortedSet,
+		elements...,
+	).Result(); err != nil {
+		return fmt.Errorf("ExistsFlowDynamicAccountIDbyRedisPipe ZAddNX err:%+v", err)
+	}
+
+	return nil
 }

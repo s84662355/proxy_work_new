@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+const VsIPTransitDynamicFlowRecordsTableName = "vs_ip_transit_dynamic_flow_records"
+
 type VsIPTransitDynamicFlowRecords struct {
 	ID                        int64     `gorm:"column:id;type:bigint(20);primary_key;AUTO_INCREMENT" json:"id"`
 	OldUseFlow                uint64    `gorm:"column:old_use_flow;type:bigint(20) unsigned;NOT NULL" json:"old_use_flow"`                       // 更新前的使用流量

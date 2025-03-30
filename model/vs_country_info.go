@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+const VsCountryInfoTableName = "vs_country_info"
+
 // 虚拟服务国家信息表
 type VsCountryInfo struct {
 	ID          uint       `gorm:"column:id;type:int(11) unsigned;primary_key;AUTO_INCREMENT" json:"id"`
@@ -18,5 +20,5 @@ type VsCountryInfo struct {
 }
 
 func (m *VsCountryInfo) TableName() string {
-	return "vs_country_info"
+	return VsCountryInfoTableName
 }

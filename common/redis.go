@@ -9,12 +9,12 @@ import (
 
 var GetRedisDB = sync.OnceValue[*redis.Client](func() *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:         config.ConfData.Redis.Addr,
-		Password:     config.ConfData.Redis.Password,
-		DB:           config.ConfData.Redis.DB,
-		MinIdleConns: config.ConfData.Redis.MinIdleConns,
-		MaxIdleConns: config.ConfData.Redis.MaxIdleConns,
-		PoolSize:     config.ConfData.Redis.PoolSize,
+		Addr:         config.GetConf().Redis.Addr,
+		Password:     config.GetConf().Redis.Password,
+		DB:           config.GetConf().Redis.DB,
+		MinIdleConns: config.GetConf().Redis.MinIdleConns,
+		MaxIdleConns: config.GetConf().Redis.MaxIdleConns,
+		PoolSize:     config.GetConf().Redis.PoolSize,
 	})
 	return rdb
 })

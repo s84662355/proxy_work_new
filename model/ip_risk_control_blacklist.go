@@ -2,6 +2,8 @@ package model
 
 import "time"
 
+const IpRiskControlBlacklistTableName = "ip_risk_control_blacklist"
+
 type IpRiskControlBlacklist struct {
 	ID               uint64    `gorm:"column:id;type:bigint(20);primary_key;AUTO_INCREMENT" json:"id"`
 	TargetSite       string    `gorm:"column:target_site;type:varchar(255);NOT NULL" json:"target_site"`          // 地址
@@ -12,5 +14,5 @@ type IpRiskControlBlacklist struct {
 }
 
 func (m IpRiskControlBlacklist) TableName() string {
-	return "ip_risk_control_blacklist"
+	return IpRiskControlBlacklistTableName
 }

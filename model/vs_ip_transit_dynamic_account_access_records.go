@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const VsIPTransitDynamicAccountAccessRecordsTableName = "vs_ip_transit_dynamic_account_access_records"
+
 // 子账号访问记录表
 type VsIPTransitDynamicAccountAccessRecords struct {
 	ID         uint64    `gorm:"column:id;type:bigint(20) unsigned;primary_key;AUTO_INCREMENT" json:"id"` // 主键id
@@ -20,5 +22,5 @@ type VsIPTransitDynamicAccountAccessRecords struct {
 }
 
 func (m *VsIPTransitDynamicAccountAccessRecords) TableName() string {
-	return "vs_ip_transit_dynamic_account_access_records"
+	return VsIPTransitDynamicAccountAccessRecordsTableName
 }

@@ -1,5 +1,7 @@
 package model
 
+const VsIPTransitDynamicProviderTableName = "vs_ip_transit_dynamic_provider"
+
 // 供应商配置表
 type VsIPTransitDynamicProvider struct {
 	ProviderName string `gorm:"column:provider_name;type:varchar(50);primary_key" json:"provider_name"` // 供应商名称
@@ -11,5 +13,5 @@ type VsIPTransitDynamicProvider struct {
 }
 
 func (m *VsIPTransitDynamicProvider) TableName() string {
-	return "vs_ip_transit_dynamic_provider"
+	return VsIPTransitDynamicProviderTableName
 }

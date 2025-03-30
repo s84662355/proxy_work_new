@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const IpRiskControlAccessLogTableName = "ip_risk_control_access_log"
+
 type IpRiskControlAccessLog struct {
 	ID               uint64    `gorm:"column:id;type:bigint(20);primary_key;AUTO_INCREMENT" json:"id"`
 	TargetSite       string    `gorm:"column:target_site;type:varchar(255);NOT NULL" json:"target_site"`                 // 地址
@@ -17,5 +19,5 @@ type IpRiskControlAccessLog struct {
 }
 
 func (m IpRiskControlAccessLog) TableName() string {
-	return "ip_risk_control_access_log"
+	return IpRiskControlAccessLogTableName
 }

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"go.uber.org/zap"
 	"mproxy/config"
 	"mproxy/log"
 	"mproxy/server"
@@ -25,15 +26,15 @@ func init() {
 	fmt.Println(configPath)
 
 	config.Load(configPath)
-	fmt.Println(filepath.Join(config.ConfData.LogDir, config.ServiceName, mark))
-	log.Init(filepath.Join(config.ConfData.LogDir, config.ServiceName, mark))
-	log.Infof("%s服务启动", config.ServiceName)
+	fmt.Println(filepath.Join(config.GetConf().LogDir, config.ServiceName, mark))
+	log.Init(filepath.Join(config.GetConf().LogDir, config.ServiceName, mark))
+	log.Info(fmt.Sprintf("%s服务启动", config.ServiceName))
 	go gohttp()
 }
 
 func main() {
 	if err := server.Start(); err != nil {
-		log.Fatalf("启动服务%s失败 err=%+v", config.ServiceName, err)
+		log.Fatal(fmt.Sprintf("启动服务%s失败", config.ServiceName), zap.Any("error", err))
 		return
 	}
 

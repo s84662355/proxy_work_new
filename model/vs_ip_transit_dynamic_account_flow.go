@@ -1,5 +1,7 @@
 package model
 
+const VsIPTransitDynamicAccountFlowTableName = "vs_ip_transit_dynamic_account_flow"
+
 // 子账号每日使用流量表
 type VsIPTransitDynamicAccountFlow struct {
 	AccountID         uint64 `gorm:"primaryKey;autoIncrement:false;column:account_id;type:bigint(20) unsigned;NOT NULL" json:"account_id"` // 子账号id
@@ -9,5 +11,5 @@ type VsIPTransitDynamicAccountFlow struct {
 }
 
 func (m *VsIPTransitDynamicAccountFlow) TableName() string {
-	return "vs_ip_transit_dynamic_account_flow"
+	return VsIPTransitDynamicAccountFlowTableName
 }

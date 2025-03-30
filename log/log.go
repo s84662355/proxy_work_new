@@ -1,149 +1,79 @@
 package log
 
 import (
-	"fmt"
 	"runtime/debug"
+
+	"go.uber.org/zap"
 )
 
-func Info(p ...any) {
+func Info(msg string, fields ...zap.Field) {
 	if zaploger == nil {
 		return
 	}
-	zaploger.Info(fmt.Sprint(p...))
+	zaploger.Info(msg, fields...)
 }
 
-func Warn(p ...interface{}) {
+func Warn(msg string, fields ...zap.Field) {
 	if zaploger == nil {
 		return
 	}
-	zaploger.Warn(fmt.Sprint(p...))
+	zaploger.Warn(msg, fields...)
 }
 
-func Error(p ...interface{}) {
+func Error(msg string, fields ...zap.Field) {
 	if zaploger == nil {
 		return
 	}
-	zaploger.Error(fmt.Sprint(p...))
+	zaploger.Error(msg, fields...)
 }
 
-func Debug(p ...interface{}) {
+func Debug(msg string, fields ...zap.Field) {
 	if zaploger == nil {
 		return
 	}
-	zaploger.Debug(fmt.Sprint(p...))
+	zaploger.Debug(msg, fields...)
 }
 
-func DPanic(p ...interface{}) {
+func DPanic(msg string, fields ...zap.Field) {
 	if zaploger == nil {
 		return
 	}
-	zaploger.DPanic(fmt.Sprint(p...))
+	zaploger.DPanic(msg, fields...)
 }
 
-func Panic(p ...interface{}) {
+func Panic(msg string, fields ...zap.Field) {
 	if zaploger == nil {
 		return
 	}
-	zaploger.Panic(fmt.Sprint(p...))
+	zaploger.Panic(msg, fields...)
 }
 
-func Fatal(p ...interface{}) {
+func Fatal(msg string, fields ...zap.Field) {
 	if zaploger == nil {
 		return
 	}
-	zaploger.Fatal(fmt.Sprint(p...))
+	zaploger.Fatal(msg, fields...)
 }
 
 // /会抛出异常
-func Recover(p ...interface{}) {
+func Recover(msg string, fields ...zap.Field) {
 	if zaploger == nil {
 		return
 	}
 
 	err := recover()
 	if err != nil {
-		zaploger.Panic((fmt.Sprint(p...)) + fmt.Sprint(" error: ", err) + " debug.Stack: " + string(debug.Stack()))
+		zaploger.Panic(msg, zap.Any("recover", err), zap.Any("debug.Stack", string(debug.Stack())))
 	}
 }
 
 // /不会抛出异常
-func DRecover(p ...interface{}) {
+func DRecover(msg string, fields ...zap.Field) {
 	if zaploger == nil {
 		return
 	}
 	err := recover()
 	if err != nil {
-		zaploger.DPanic((fmt.Sprint(p...)) + fmt.Sprint(" error: ", err) + " debug.Stack: " + string(debug.Stack()))
-	}
-}
-
-func Infof(format string, args ...interface{}) {
-	if zaploger == nil {
-		return
-	}
-	zaploger.Info(fmt.Sprintf(format, args...))
-}
-
-func Warnf(format string, args ...interface{}) {
-	if zaploger == nil {
-		return
-	}
-	zaploger.Warn(fmt.Sprintf(format, args...))
-}
-
-func Errorf(format string, args ...interface{}) {
-	if zaploger == nil {
-		return
-	}
-	zaploger.Error(fmt.Sprintf(format, args...))
-}
-
-func Debugf(format string, args ...interface{}) {
-	if zaploger == nil {
-		return
-	}
-	zaploger.Debug(fmt.Sprintf(format, args...))
-}
-
-func DPanicf(format string, args ...interface{}) {
-	if zaploger == nil {
-		return
-	}
-	zaploger.DPanic(fmt.Sprintf(format, args...))
-}
-
-func Panicf(format string, args ...interface{}) {
-	if zaploger == nil {
-		return
-	}
-	zaploger.Panic(fmt.Sprintf(format, args...))
-}
-
-func Fatalf(format string, args ...interface{}) {
-	if zaploger == nil {
-		return
-	}
-	zaploger.Fatal(fmt.Sprintf(format, args...))
-}
-
-// /会抛出异常
-func Recoverf(format string, args ...interface{}) {
-	if zaploger == nil {
-		return
-	}
-	err := recover()
-	if err != nil {
-		zaploger.Panic((fmt.Sprintf(format, args...)) + fmt.Sprint(" error: ", err) + " debug.Stack: " + string(debug.Stack()))
-	}
-}
-
-// /不会抛出异常
-func DRecoverf(format string, args ...interface{}) {
-	if zaploger == nil {
-		return
-	}
-	err := recover()
-	if err != nil {
-		zaploger.DPanic((fmt.Sprintf(format, args...)) + fmt.Sprint(" error: ", err) + " debug.Stack: " + string(debug.Stack()))
+		zaploger.DPanic(msg, zap.Any("recover", err), zap.Any("debug.Stack", string(debug.Stack())))
 	}
 }

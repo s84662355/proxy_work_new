@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const VsIPTransitDynamicAccountTableName = "vs_ip_transit_dynamic_account"
+
 // 动态ip子用户表
 type VsIPTransitDynamicAccount struct {
 	ID                   int64     `gorm:"column:id;type:bigint(20);primary_key;AUTO_INCREMENT" json:"id"`                     // 主键id
@@ -26,7 +28,7 @@ type VsIPTransitDynamicAccount struct {
 }
 
 func (m VsIPTransitDynamicAccount) TableName() string {
-	return "vs_ip_transit_dynamic_account"
+	return VsIPTransitDynamicAccountTableName
 }
 
 type DirectConnectionInfo struct {
