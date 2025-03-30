@@ -40,7 +40,7 @@ package service
 // 		if recordId == 0 {
 // 			err = tx.
 // 				Model(&model.VsIPFlowRecords{}).
-// 				Select("id,flow").
+// 				Select("id,flow,is_datacenter").
 // 				Where(
 // 					"user_id = ? and is_deal = 0 and  id >=  ?",
 // 					userId, flowRecordData.LastId,
@@ -55,7 +55,7 @@ package service
 // 		} else if recordId < flowRecordData.LastId {
 // 			err = tx.
 // 				Model(&model.VsIPFlowRecords{}).
-// 				Select("id,flow").
+// 				Select("id,flow,is_datacenter").
 // 				Where(
 // 					"user_id = ? and is_deal = 0 and  id  BETWEEN ? and   ?",
 // 					userId, recordId, flowRecordData.LastId,
@@ -70,7 +70,7 @@ package service
 // 		} else {
 // 			err = tx.
 // 				Model(&model.VsIPFlowRecords{}).
-// 				Select("id,flow").
+// 				Select("id,flow,is_datacenter").
 // 				Where(
 // 					"user_id = ? and is_deal = 0 and  id >=  ?",
 // 					userId, recordId,
