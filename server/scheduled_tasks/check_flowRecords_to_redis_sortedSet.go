@@ -60,7 +60,7 @@ func (m *manager) updateFlowRecordsFromRedisSortedSet(ctx context.Context) {
 				BZMPop(
 					ctx,
 					5*time.Second, // 等待超时5秒
-					"MIN ",
+					"MIN",
 					30, // 弹出30个
 					constant.FlowUserIdQueueSortedSet,
 				).Result()
