@@ -21,6 +21,8 @@ const (
 	DynamicAccountDataCacheRedisTtl       = 60 * 60 * time.Second
 	DynamicAccountBatchUpdateDataLoopTime = 15 * 60 * time.Second
 	DynamicAccountRedisFlowTtl            = 60 * 60 * time.Second
+
+	DynamicAccountDbLockTtl = 8 * time.Second
 )
 
 const ExistsFlowDynamicAccountIDbyRedisLua = `

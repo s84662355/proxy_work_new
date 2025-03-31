@@ -91,7 +91,7 @@ func (m *manager) updateFlowRecordsFromRedisSortedSet(ctx context.Context) {
 
 					if userId != 0 {
 						trm.Run(func() {
-							m.updateAndAutoBuyFlow(userId, recordId)
+							m.updateFlowAndAutoBuyFlow(userId, recordId)
 						})
 					}
 				}
@@ -102,10 +102,11 @@ func (m *manager) updateFlowRecordsFromRedisSortedSet(ctx context.Context) {
 	}
 }
 
-func (m *manager) updateAndAutoBuyFlow(
+func (m *manager) updateFlowAndAutoBuyFlow(
 	userId int64,
 	recordId uint64,
 ) {
+	///获取分布式锁
 	lockKey := fmt.Sprint(constant.VsIPTransitDynamicUpdateFlowRedisLock, userId)
 	if !common.GetRedisDB().
 		SetNX(
@@ -138,7 +139,7 @@ func (m *manager) updateAndAutoBuyFlow(
 		).Val() {
 		return
 	}
-	if err := service.DynamicFlowAndAutoBuy(
+	if _, err := service.DynamicFlowAndAutoBuy(
 		context.Background(),
 		common.GetMysqlDB(),
 		userId,

@@ -12,6 +12,7 @@ import (
 	"mproxy/constant"
 	"mproxy/log"
 	"mproxy/service"
+	"mproxy/utils/taskRunManager"
 )
 
 // /把子账号的流量从redis同步到MySQL
@@ -19,6 +20,7 @@ func (m *manager) updateDynamicAccountFlowFromRedisToDB(ctx context.Context) {
 	timneOut := 5 * time.Second
 	ticker := time.NewTicker(timneOut)
 	defer ticker.Stop()
+	trm := taskRunManager.NewChanTask(5)
 	for {
 		ticker.Reset(timneOut)
 		select {
@@ -48,17 +50,34 @@ func (m *manager) updateDynamicAccountFlowFromRedisToDB(ctx context.Context) {
 			for _, item := range results {
 				num, _ := strconv.ParseInt(fmt.Sprint(item.Member), 10, 64)
 				if num > 0 {
-					err := service.UpdateDynamicAccountFlowFromRedisToDB(
-						context.Background(),
-						common.GetMysqlDB(),
-						common.GetRedisDB(),
-						num,
-					)
-					if err != nil {
-						log.Error("[定时任务scheduled_tasks] updateDynamicAccountFlowFromRedisToDB 更新子账号", zap.Any("error", err))
-					}
+					trm.Run(func() {
+						///获取分布式锁
+						lockkey := fmt.Sprint(constant.DynamicAccountDbLock, num)
+						if !common.
+							GetRedisDB().
+							SetNX(
+								context.Background(),
+								lockkey,
+								"", constant.DynamicAccountDbLockTtl,
+							).Val() {
+							return
+						}
+
+						defer common.GetRedisDB().Del(context.Background(), lockkey)
+
+						err := service.UpdateDynamicAccountFlowFromRedisToDB(
+							context.Background(),
+							common.GetMysqlDB(),
+							common.GetRedisDB(),
+							num,
+						)
+						if err != nil {
+							log.Error("[定时任务scheduled_tasks] updateDynamicAccountFlowFromRedisToDB 更新子账号", zap.Any("error", err))
+						}
+					})
 				}
 			}
+			trm.Wait()
 
 		}
 	}

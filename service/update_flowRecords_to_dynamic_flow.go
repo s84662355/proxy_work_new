@@ -18,10 +18,10 @@ func DynamicFlowAndAutoBuy(
 	ctx context.Context,
 	db *gorm.DB,
 	userId int64,
-) error {
+) (bool, error) {
 	vsIPTransitDynamic, err := dao.GetVsIPTransitDynamic(ctx, db, uint64(userId))
 	if err != nil {
-		return fmt.Errorf("UpdateFlowRecordsToDynamicFlowAndAutoBuy 获取用户信息失败 err:%+v", err)
+		return false, fmt.Errorf("UpdateFlowRecordsToDynamicFlowAndAutoBuy 获取用户信息失败 err:%+v", err)
 	}
 	normalFlowAutoBuy := false
 	datacenterFlowAutoBuy := false
@@ -35,16 +35,18 @@ func DynamicFlowAndAutoBuy(
 		///调用自动购买流量接口
 		_, err := api.AutomaticRechargeTraffic(userId, normalFlowAutoBuy, datacenterFlowAutoBuy)
 		if err != nil {
-			return fmt.Errorf(
+			return true, fmt.Errorf(
 				`UpdateFlowRecordsToDynamicFlowAndAutoBuy normalFlowAutoBuy:%+v, datacenterFlowAutoBuy:%+v  自动购买流量失败 err:%+v`,
 				normalFlowAutoBuy,
 				datacenterFlowAutoBuy,
 				err,
 			)
 		}
+
+		return true, nil
 	}
 
-	return nil
+	return false, nil
 }
 
 // /更新流量数据记录到主账号

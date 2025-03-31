@@ -19,9 +19,9 @@ type manager struct {
 func (m *manager) Start() error {
 	m.tcm.AddTask(1, m.batchUpdateDynamicAccountDataCache)
 	m.tcm.AddTask(1, m.batchUpdateDynamicDataCache)
-	m.tcm.AddTask(1, m.updateDynamicAccountFlowFromRedisToDB)
+	m.tcm.AddTask(2, m.updateDynamicAccountFlowFromRedisToDB)
 	m.tcm.AddTask(1, m.checkFlowRecordsToRedisSortedSet)
-	m.tcm.AddTask(1, m.updateFlowRecordsFromRedisSortedSet)
+	m.tcm.AddTask(2, m.updateFlowRecordsFromRedisSortedSet)
 
 	return nil
 }
