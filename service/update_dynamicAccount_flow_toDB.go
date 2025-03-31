@@ -7,9 +7,11 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"mproxy/constant"
 	"mproxy/dao"
+	"mproxy/log"
 	"mproxy/model"
 )
 
@@ -51,10 +53,10 @@ func UpdateDynamicAccountFlowFromRedisToDB(
 			supplyFlow,
 			constant.DynamicAccountRedisFlowTtl,
 		); er != nil {
-			return fmt.Errorf("UpdateDynamicAccountFlowFromRedisToDB   err:%+v and er:%+v", err, er)
+			log.Error("[service] UpdateDynamicAccountFlowFromRedisToDB 回滚流量到redis失败", zap.Any("error", err))
 		}
 
-		return fmt.Errorf("UpdateDynamicAccountFlowToDB    %+v", err)
+		return err
 	}
 
 	return nil
@@ -66,7 +68,7 @@ func UpdateDynamicAccountFlowToDB(
 	accountId int64,
 	supplyFlow int64,
 ) error {
-	if err := db.Transaction(func(tx *gorm.DB) error {
+	if err := db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		////修改账号的流量
 		errTransaction := tx.Exec(
 			fmt.Sprintf(

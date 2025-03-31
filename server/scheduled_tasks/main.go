@@ -21,6 +21,7 @@ func (m *manager) Start() error {
 	m.tcm.AddTask(1, m.batchUpdateDynamicDataCache)
 	m.tcm.AddTask(1, m.updateDynamicAccountFlowFromRedisToDB)
 	m.tcm.AddTask(1, m.checkFlowRecordsToRedisSortedSet)
+	m.tcm.AddTask(1, m.updateFlowRecordsFromRedisSortedSet)
 
 	return nil
 }

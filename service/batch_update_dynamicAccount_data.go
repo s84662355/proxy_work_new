@@ -22,7 +22,7 @@ func BatchUpdateDynamicAccountDataCache(
 	rdb *redis.Client,
 ) (RowsAffected int64, err error) {
 	var results []*model.VsIPTransitDynamicAccount = nil
-	result := db.Model(&model.VsIPTransitDynamicAccount{}).FindInBatches(
+	result := db.WithContext(ctx).Model(&model.VsIPTransitDynamicAccount{}).FindInBatches(
 		&results,
 		constant.BatcheUpdateDynamicAccountDataCacheSize,
 		func(tx *gorm.DB, batch int) error {

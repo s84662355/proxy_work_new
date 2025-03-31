@@ -21,7 +21,7 @@ func BatchUpdateDynamicDataCache(
 ) (RowsAffected int64, err error) {
 	var results []*model.VsIPTransitDynamic = nil
 
-	result := db.Model(&model.VsIPTransitDynamic{}).FindInBatches(
+	result := db.WithContext(ctx).Model(&model.VsIPTransitDynamic{}).FindInBatches(
 		&results,
 		constant.BatchUpdateDynamicDataCacheSize,
 		func(tx *gorm.DB, batch int) error {

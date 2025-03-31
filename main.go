@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"go.uber.org/zap"
+	_ "mproxy/api"
 	"mproxy/config"
 	"mproxy/log"
 	"mproxy/server"

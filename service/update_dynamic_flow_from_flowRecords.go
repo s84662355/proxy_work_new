@@ -31,7 +31,7 @@ func CheckFlowRecordsToRedisSortedSet(
 	           ) as Records 
 	                GROUP BY user_id
     `)
-	if err := db.Raw(sql).Scan(&results).Error; err != nil {
+	if err := db.WithContext(ctx).Raw(sql).Scan(&results).Error; err != nil {
 		return 0, fmt.Errorf("CheckFlowRecordsToRedisSortedSet sql raw err:%+v", err)
 	}
 
