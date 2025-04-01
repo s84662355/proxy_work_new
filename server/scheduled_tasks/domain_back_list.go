@@ -15,7 +15,7 @@ import (
 // 推送域名黑名单到网关
 func (m *manager) pushBlacklistToProxyGateWay(ctx context.Context) {
 	loopTime := 10 * 60 * time.Second
-	ticker := time.NewTicker(10 * 60 * time.Second)
+	ticker := time.NewTicker(loopTime)
 	defer ticker.Stop()
 	for {
 		ticker.Reset(loopTime)

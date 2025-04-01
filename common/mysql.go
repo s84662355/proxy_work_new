@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-
+"fmt"
 	"mproxy/config"
 )
 
@@ -15,11 +15,11 @@ var GetMysqlDB = sync.OnceValue[*gorm.DB](func() *gorm.DB {
 		DSN: config.GetConf().Mysql.Source,
 	}), &gorm.Config{TranslateError: true})
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("初始化MySQL失败error:%+v",err))
 	}
 	sqlDB, err := db.DB()
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("初始化MySQL失败error:%+v",err))
 	}
 	sqlDB.SetMaxIdleConns(config.GetConf().Mysql.MaxIdleConns)
 	// SetMaxOpenConns 设置打开数据库连接的最大数量。
