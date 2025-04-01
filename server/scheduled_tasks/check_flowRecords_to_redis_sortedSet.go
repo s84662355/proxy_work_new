@@ -17,7 +17,7 @@ import (
 	"mproxy/utils/taskRunManager"
 )
 
-// /检查流量表
+// 检查流量表
 func (m *manager) checkFlowRecordsToRedisSortedSet(ctx context.Context) {
 	loopTime := 60 * time.Second
 	ticker := time.NewTicker(loopTime)
@@ -25,24 +25,25 @@ func (m *manager) checkFlowRecordsToRedisSortedSet(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Info("[定时任务scheduled_tasks] 定时执行 checkFlowRecordsToRedisSortedSet 上下文Done() 退出")
+			log.Info("[定时任务scheduled_tasks]检查流量表任务上下文结束退出")
 			return
 		case t := <-ticker.C:
-			log.Info("[定时任务scheduled_tasks] 定时执行 checkFlowRecordsToRedisSortedSet 开始 ", zap.Time("Time", t))
+			log.Info("[定时任务scheduled_tasks]定时执行检查流量表任务开始 ", zap.Time("Time", t))
 			v, err := service.CheckFlowRecordsToRedisSortedSet(
 				ctx,
 				common.GetMysqlDB(),
 				common.GetRedisDB(),
 			)
 			if err != nil {
-				log.Error("[定时任务scheduled_tasks] 定时执行 checkFlowRecordsToRedisSortedSet   执行错误", zap.Time("Time", t), zap.Any("error", err))
+				log.Error("[定时任务scheduled_tasks]定时执行检查流量表任务错误", zap.Any("error", err))
 			}
-			log.Info("[定时任务scheduled_tasks] 定时执行 checkFlowRecordsToRedisSortedSet 结束  ", zap.String("Time", fmt.Sprintf("%+v---%+v", t, time.Now())), zap.Int64("count", v))
+			log.Info("[定时任务scheduled_tasks]定时执行检查流量表任务完成", zap.String("Time", fmt.Sprintf("%+v---%+v", t, time.Now())), zap.Int64("count", v))
 			ticker.Reset(loopTime)
 		}
 	}
 }
 
+// 更新主账号流量
 func (m *manager) updateFlowRecordsFromRedisSortedSet(ctx context.Context) {
 	loopTime := 5 * time.Second
 	ticker := time.NewTicker(loopTime)
@@ -52,10 +53,10 @@ func (m *manager) updateFlowRecordsFromRedisSortedSet(ctx context.Context) {
 		ticker.Reset(loopTime)
 		select {
 		case <-ctx.Done():
-			log.Info("[定时任务scheduled_tasks] 定时执行 getFlowRecordsFromRedisSortedSet 上下文Done() 退出")
+			log.Info("[定时任务scheduled_tasks]更新主账号流量任务上下文结束退出")
 			return
 		case t := <-ticker.C:
-			log.Info("[定时任务scheduled_tasks] 定时执行 getFlowRecordsFromRedisSortedSet 开始 ", zap.Time("Time", t))
+			log.Info("[定时任务scheduled_tasks]定时执行更新主账号流量开始 ", zap.Time("Time", t))
 			_, results, err := common.GetRedisDB().
 				BZMPop(
 					ctx,
@@ -66,7 +67,7 @@ func (m *manager) updateFlowRecordsFromRedisSortedSet(ctx context.Context) {
 				).Result()
 			if err != nil {
 				if err != redis.Nil {
-					log.Error("[定时任务scheduled_tasks] getFlowRecordsFromRedisSortedSet 执行 BZMPop 命令时出错 ", zap.Any("error", err))
+					log.Error("[定时任务scheduled_tasks]更新主账号流量执行BZMPop命令时出错 ", zap.Any("error", err))
 				}
 				continue
 			}
@@ -80,7 +81,7 @@ func (m *manager) updateFlowRecordsFromRedisSortedSet(ctx context.Context) {
 					}
 					userId, err := strconv.ParseInt(members[0], 10, 64)
 					if err != nil {
-						log.Error("[定时任务scheduled_tasks] getFlowRecordsFromRedisSortedSet strconv.ParseInt 出错 ", zap.Any("error", err))
+						log.Error("[定时任务scheduled_tasks]更新主账号流量执行strconv.ParseInt错误", zap.Any("error", err))
 						continue
 					}
 
@@ -102,6 +103,7 @@ func (m *manager) updateFlowRecordsFromRedisSortedSet(ctx context.Context) {
 	}
 }
 
+// 更新主账号流量并且主动购买流量
 func (m *manager) updateFlowAndAutoBuyFlow(
 	userId int64,
 	recordId uint64,
@@ -126,7 +128,7 @@ func (m *manager) updateFlowAndAutoBuyFlow(
 		300,
 		recordId,
 	); err != nil {
-		log.Error("[定时任务scheduled_tasks] getFlowRecordsFromRedisSortedSet 更新流量出错 ", zap.Int64("userId", userId), zap.Any("error", err))
+		log.Error("[定时任务scheduled_tasks]更新主账号流量并且主动购买流量错误", zap.Int64("userId", userId), zap.Any("error", err))
 		return
 	}
 
@@ -144,6 +146,6 @@ func (m *manager) updateFlowAndAutoBuyFlow(
 		common.GetMysqlDB(),
 		userId,
 	); err != nil {
-		log.Error("[定时任务scheduled_tasks] getFlowRecordsFromRedisSortedSet 自动购买流量出错 ", zap.Int64("userId", userId), zap.Any("error", err))
+		log.Error("[定时任务scheduled_tasks]自动购买流量错误", zap.Int64("userId", userId), zap.Any("error", err))
 	}
 }

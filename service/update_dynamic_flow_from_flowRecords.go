@@ -11,6 +11,7 @@ import (
 	"mproxy/model"
 )
 
+// /检查流量表投进redis有序集合
 func CheckFlowRecordsToRedisSortedSet(
 	ctx context.Context,
 	db *gorm.DB,
@@ -32,7 +33,7 @@ func CheckFlowRecordsToRedisSortedSet(
 	                GROUP BY user_id
     `)
 	if err := db.WithContext(ctx).Raw(sql).Scan(&results).Error; err != nil {
-		return 0, fmt.Errorf("CheckFlowRecordsToRedisSortedSet sql raw err:%+v", err)
+		return 0, fmt.Errorf("检查流量表投进redis有序集合 sql raw error:%+v", err)
 	}
 
 	var elements []redis.Z = nil
@@ -52,7 +53,7 @@ func CheckFlowRecordsToRedisSortedSet(
 		constant.FlowUserIdQueueSortedSet,
 		elements...,
 	).Result(); err != nil {
-		return 0, fmt.Errorf("CheckFlowRecordsToRedisSortedSet ZAddNX err:%+v", err)
+		return 0, fmt.Errorf("检查流量表投进redis有序集合 ZAddNX error:%+v", err)
 	} else {
 		return v, nil
 	}

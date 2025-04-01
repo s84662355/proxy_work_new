@@ -14,6 +14,7 @@ import (
 	"mproxy/model"
 )
 
+// /批量更新主账号缓存
 func BatchUpdateDynamicDataCache(
 	ctx context.Context,
 	db *gorm.DB,
@@ -31,7 +32,7 @@ func BatchUpdateDynamicDataCache(
 					rdb,
 					c,
 				); err != nil {
-					log.Error("[service] BatchUpdateDynamicDataCache 设置数据 执行错误", zap.Any("error", err))
+					log.Error("[service]批量更新主账号缓存 设置数据执行错误", zap.Any("error", err))
 				}
 			}
 
@@ -40,6 +41,7 @@ func BatchUpdateDynamicDataCache(
 	return result.RowsAffected, result.Error
 }
 
+// / 使用redis管道设置主帐号缓存
 func UpdateDynamicDataCachebyRedisPipe(
 	ctx context.Context,
 	rdb *redis.Client,
@@ -51,7 +53,7 @@ func UpdateDynamicDataCachebyRedisPipe(
 			for _, v := range results {
 				data, err := json.Marshal(v)
 				if err != nil {
-					log.Error("[service] UpdateDynamicDataCachebyRedisPipe json 解析失败", zap.Any("error", err), zap.Any("data", data))
+					log.Error("[service]使用redis管道设置主帐号缓存 json解析失败", zap.Any("error", err), zap.Any("data", data))
 
 					continue
 				}
@@ -71,5 +73,5 @@ func UpdateDynamicDataCachebyRedisPipe(
 		return nil
 	}
 
-	return fmt.Errorf("UpdateDynamicDataCachebyRedisPipe %+v", err)
+	return fmt.Errorf("使用redis管道设置主帐号缓存 error:%+v", err)
 }

@@ -15,7 +15,7 @@ import (
 	"mproxy/utils/taskRunManager"
 )
 
-// /把子账号的流量从redis同步到MySQL
+// 把子账号的流量从redis同步到MySQL
 func (m *manager) updateDynamicAccountFlowFromRedisToDB(ctx context.Context) {
 	timneOut := 5 * time.Second
 	ticker := time.NewTicker(timneOut)
@@ -25,7 +25,7 @@ func (m *manager) updateDynamicAccountFlowFromRedisToDB(ctx context.Context) {
 		ticker.Reset(timneOut)
 		select {
 		case <-ctx.Done():
-			log.Info("[定时任务scheduled_tasks] 定时执行 updateDynamicAccountFlowFromRedisToDB 上下文Done() 退出")
+			log.Info("[定时任务scheduled_tasks]把子账号的流量从redis同步到MySQL任务上下文结束退出")
 			return
 		case <-ticker.C:
 
@@ -40,7 +40,7 @@ func (m *manager) updateDynamicAccountFlowFromRedisToDB(ctx context.Context) {
 				).Result()
 			if err != nil {
 				if err != redis.Nil {
-					log.Error("[定时任务scheduled_tasks] updateDynamicAccountFlowFromRedisToDB 执行 BZMPop 命令时出错 ", zap.Any("error", err))
+					log.Error("[定时任务scheduled_tasks]把子账号的流量从redis同步到MySQL执行BZMPop命令时出错", zap.Any("error", err))
 				}
 
 				continue
@@ -72,7 +72,7 @@ func (m *manager) updateDynamicAccountFlowFromRedisToDB(ctx context.Context) {
 							num,
 						)
 						if err != nil {
-							log.Error("[定时任务scheduled_tasks] updateDynamicAccountFlowFromRedisToDB 更新子账号", zap.Any("error", err))
+							log.Error("[定时任务scheduled_tasks]把子账号的流量从redis同步到MySQL更新子账号错误", zap.Any("error", err))
 						}
 					})
 				}

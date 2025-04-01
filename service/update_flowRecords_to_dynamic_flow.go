@@ -14,6 +14,7 @@ import (
 	"mproxy/model"
 )
 
+// /更新主账号流量并且自动购买流量
 func DynamicFlowAndAutoBuy(
 	ctx context.Context,
 	db *gorm.DB,
@@ -21,7 +22,7 @@ func DynamicFlowAndAutoBuy(
 ) (bool, error) {
 	vsIPTransitDynamic, err := dao.GetVsIPTransitDynamic(ctx, db, uint64(userId))
 	if err != nil {
-		return false, fmt.Errorf("UpdateFlowRecordsToDynamicFlowAndAutoBuy 获取用户信息失败 err:%+v", err)
+		return false, fmt.Errorf("更新主账号流量并且自动购买流量 获取用户信息失败 err:%+v", err)
 	}
 	normalFlowAutoBuy := false
 	datacenterFlowAutoBuy := false
@@ -36,7 +37,7 @@ func DynamicFlowAndAutoBuy(
 		_, err := api.AutomaticRechargeTraffic(userId, normalFlowAutoBuy, datacenterFlowAutoBuy)
 		if err != nil {
 			return true, fmt.Errorf(
-				`UpdateFlowRecordsToDynamicFlowAndAutoBuy normalFlowAutoBuy:%+v, datacenterFlowAutoBuy:%+v  自动购买流量失败 err:%+v`,
+				`更新主账号流量并且自动购买流量 normalFlowAutoBuy:%+v, datacenterFlowAutoBuy:%+v  自动购买流量失败 err:%+v`,
 				normalFlowAutoBuy,
 				datacenterFlowAutoBuy,
 				err,
@@ -49,7 +50,7 @@ func DynamicFlowAndAutoBuy(
 	return false, nil
 }
 
-// /更新流量数据记录到主账号
+// 更新流量数据记录到主账号
 func UpdateFlowRecordsToDynamicFlow(
 	ctx context.Context,
 	db *gorm.DB,
@@ -62,11 +63,11 @@ func UpdateFlowRecordsToDynamicFlow(
 		vsIPTransitDynamic := &model.VsIPTransitDynamic{}
 		err = tx.Where("user_id = ?  ", userId).First(vsIPTransitDynamic).Error
 		if err != nil {
-			return fmt.Errorf("UpdateFlowRecordsToDynamicFlow 查找id:%d主账号信息错误 err:%+v", userId, err)
+			return fmt.Errorf("更新流量数据记录到主账号 查找id:%d主账号信息错误 err:%+v", userId, err)
 		}
 
 		if vsIPTransitDynamic.UserID == 0 {
-			return fmt.Errorf("UpdateFlowRecordsToDynamicFlow 查找id:%d主账号信息不存在", userId)
+			return fmt.Errorf("更新流量数据记录到主账号 查找id:%d主账号信息不存在", userId)
 		}
 
 		flowRecordData := &model.FlowRecordData{}
@@ -88,7 +89,7 @@ func UpdateFlowRecordsToDynamicFlow(
 				Limit(limit).
 				Find(&recordsResult).Error
 			if err != nil {
-				return fmt.Errorf("UpdateFlowRecordsToDynamicFlow 查找流量记录失败 part1 err:%+v", err)
+				return fmt.Errorf("更新流量数据记录到主账号 查找流量记录失败 part1 err:%+v", err)
 			}
 
 		} else if recordId < flowRecordData.LastId {
@@ -103,7 +104,7 @@ func UpdateFlowRecordsToDynamicFlow(
 				Limit(limit).
 				Find(&recordsResult).Error
 			if err != nil {
-				return fmt.Errorf("UpdateFlowRecordsToDynamicFlow 查找流量记录失败 part2 err:%+v", err)
+				return fmt.Errorf("更新流量数据记录到主账号 查找流量记录失败 part2 err:%+v", err)
 			}
 
 		} else {
@@ -118,7 +119,7 @@ func UpdateFlowRecordsToDynamicFlow(
 				Limit(limit).
 				Find(&recordsResult).Error
 
-			return fmt.Errorf("UpdateFlowRecordsToDynamicFlow 查找流量记录失败 part3 err:%+v", err)
+			return fmt.Errorf("更新流量数据记录到主账号 查找流量记录失败 part3 err:%+v", err)
 		}
 
 		recordsIds := []string{}
@@ -190,11 +191,11 @@ func UpdateFlowRecordsToDynamicFlow(
 		errTransaction := dbRes.Error
 
 		if errTransaction != nil {
-			return fmt.Errorf("UpdateFlowRecordsToDynamicFlow 更新主账号流量失败 err:%+v", errTransaction)
+			return fmt.Errorf("更新流量数据记录到主账号 更新主账号流量失败 err:%+v", errTransaction)
 		}
 
 		if dbRes.RowsAffected == 0 {
-			return fmt.Errorf("UpdateFlowRecordsToDynamicFlow 更新主账号流量失败影响数据为0")
+			return fmt.Errorf("更新流量数据记录到主账号 更新主账号流量失败影响数据为0")
 		}
 
 		dbRes = tx.Exec(
@@ -209,11 +210,11 @@ func UpdateFlowRecordsToDynamicFlow(
 		)
 		errTransaction = dbRes.Error
 		if errTransaction != nil {
-			return fmt.Errorf("UpdateFlowRecordsToDynamicFlow 更新流量记录状态失败 err:%+v", errTransaction)
+			return fmt.Errorf("更新流量数据记录到主账号 更新流量记录状态失败 err:%+v", errTransaction)
 		}
 
 		if dbRes.RowsAffected == 0 || int(dbRes.RowsAffected) != len(recordsIds) {
-			return fmt.Errorf("UpdateFlowRecordsToDynamicFlow 更新流量记录状态失败数量为%d", dbRes.RowsAffected)
+			return fmt.Errorf("更新流量数据记录到主账号 更新流量记录状态失败数量为%d", dbRes.RowsAffected)
 		}
 
 		return nil

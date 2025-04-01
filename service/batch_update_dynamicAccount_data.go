@@ -15,7 +15,7 @@ import (
 	"mproxy/model"
 )
 
-// /批量更新子账号缓存
+// 批量更新子账号缓存
 func BatchUpdateDynamicAccountDataCache(
 	ctx context.Context,
 	db *gorm.DB,
@@ -29,11 +29,11 @@ func BatchUpdateDynamicAccountDataCache(
 			for c := range slices.Chunk(results, 20) {
 				///设置 DynamicAccount 缓存
 				if err := UpdateDynamicAccountDataCachebyRedisPipe(ctx, rdb, c); err != nil {
-					log.Error("[service] BatchUpdateDynamicAccountDataCache 设置数据 执行错误", zap.Any("error", err))
+					log.Error("[service]批量更新子账号缓存 设置数据执行错误", zap.Any("error", err))
 				}
 
 				if err := ExistsFlowDynamicAccountIDbyRedisPipe(ctx, rdb, results); err != nil {
-					log.Error("[service] BatchUpdateDynamicAccountDataCache Exists  执行错误 ", zap.Any("error", err))
+					log.Error("[service]批量更新子账号缓存 Exists执行错误 ", zap.Any("error", err))
 				}
 
 			}
@@ -56,7 +56,7 @@ func UpdateDynamicAccountDataCachebyRedisPipe(
 				if v.IsDelete == "0" {
 					accountData, err := json.Marshal(v)
 					if err != nil {
-						log.Error("[service] UpdateDynamicAccountDataCachebyRedisPipe json 解析失败", zap.Any("account", v), zap.Any("error", err))
+						log.Error("[service]使用redis管道批量设置子账号缓存 json解析失败", zap.Any("account", v), zap.Any("error", err))
 						continue
 					}
 					s := string(accountData)
@@ -82,7 +82,7 @@ func UpdateDynamicAccountDataCachebyRedisPipe(
 		return nil
 	}
 
-	return fmt.Errorf("UpdateDynamicAccountDataCachebyRedisPipe %+v", err)
+	return fmt.Errorf("使用redis管道批量设置子账号缓存 error:%+v", err)
 }
 
 // 使用redis管道批量判断子账号的流量是否存在
@@ -107,7 +107,7 @@ func ExistsFlowDynamicAccountIDbyRedisPipe(
 			return nil
 		})
 	if err != nil {
-		err = fmt.Errorf("ExistsFlowDynamicAccountIDbyRedisPipe redis Pipelined Exists 执行错误 err:%+v", err)
+		err = fmt.Errorf("使用redis管道批量判断子账号的流量是否存在 redis Pipelined Exists执行错误 error:%+v", err)
 		return err
 	}
 
@@ -132,7 +132,7 @@ func ExistsFlowDynamicAccountIDbyRedisPipe(
 		constant.DynamicAccountIDFlowRedisQueueSortedSet,
 		elements...,
 	).Result(); err != nil {
-		return fmt.Errorf("ExistsFlowDynamicAccountIDbyRedisPipe ZAddNX err:%+v", err)
+		return fmt.Errorf("使用redis管道批量判断子账号的流量是否存在 ZAddNX error:%+v", err)
 	}
 
 	return nil

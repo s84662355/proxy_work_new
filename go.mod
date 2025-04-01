@@ -6,6 +6,7 @@ require (
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/spf13/viper v1.20.1
+	github.com/streadway/amqp v1.1.0
 	github.com/ybbus/httpretry v1.0.2
 	go.uber.org/zap v1.27.0
 	gorm.io/driver/mysql v1.5.7

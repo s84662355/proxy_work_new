@@ -18,6 +18,7 @@ import (
 func UpdateDynamicAccountFlowFromRedisToDBWithRedisLock() {
 }
 
+// /从redis更新子账号流量
 func UpdateDynamicAccountFlowFromRedisToDB(
 	ctx context.Context,
 	db *gorm.DB,
@@ -27,12 +28,12 @@ func UpdateDynamicAccountFlowFromRedisToDB(
 	IncrementKey := fmt.Sprintf("%s%d", constant.DynamicAccountRedisFlowPrefix, accountId)
 	flow, err := rdb.GetDel(ctx, IncrementKey).Result()
 	if err != nil {
-		return fmt.Errorf("UpdateDynamicAccountFlowFromRedisToDB rdb.GetDel err:%+v", err)
+		return fmt.Errorf("从redis更新子账号流量 rdb.GetDel err:%+v", err)
 	}
 
 	supplyFlow, err := strconv.ParseInt(flow, 10, 64)
 	if err != nil {
-		return fmt.Errorf("UpdateDynamicAccountFlowFromRedisToDB  strconv.ParseInt  err:%+v", err)
+		return fmt.Errorf("从redis更新子账号流量  strconv.ParseInt  err:%+v", err)
 	}
 
 	if supplyFlow == 0 {
@@ -53,7 +54,7 @@ func UpdateDynamicAccountFlowFromRedisToDB(
 			supplyFlow,
 			constant.DynamicAccountRedisFlowTtl,
 		); er != nil {
-			log.Error("[service] UpdateDynamicAccountFlowFromRedisToDB 回滚流量到redis失败", zap.Any("error", err))
+			log.Error("[service]从redis更新子账号流量 回滚流量到redis失败", zap.Any("error", err))
 		}
 
 		return err
@@ -62,6 +63,7 @@ func UpdateDynamicAccountFlowFromRedisToDB(
 	return nil
 }
 
+// /更新子账号的流量并且插入流量记录
 func UpdateDynamicAccountFlowToDB(
 	ctx context.Context,
 	db *gorm.DB,
@@ -107,7 +109,7 @@ func UpdateDynamicAccountFlowToDB(
 						)
 			`
 
-		////记录账号当天使用的流量
+		////记录子账号当天使用的流量
 		return tx.Exec(
 			flowSQl,
 			accountId,
@@ -116,7 +118,7 @@ func UpdateDynamicAccountFlowToDB(
 			supplyFlow,
 		).Error
 	}); err != nil {
-		return fmt.Errorf("UpdateDynamicAccountFlowToDB  db.Transaction err:%+v", err)
+		return fmt.Errorf("更新子账号的流量 并且插入流量记录  db.Transaction err:%+v", err)
 	}
 
 	return nil
