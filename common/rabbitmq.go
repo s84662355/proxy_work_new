@@ -1,8 +1,9 @@
 package common
 
 import (
+	"fmt"
 	"sync"
-"fmt"
+
 	"mproxy/config"
 	"mproxy/utils/rabbitMQ"
 )
@@ -19,7 +20,7 @@ var GetRabbitMqProductPool = sync.OnceValue[*rabbitMQ.RabbitMQPool](func() *rabb
 		config.GetConf().Rabbitmq.VirtualHost,
 	)
 	if err != nil {
-		panic(fmt.Errorf("初始化rabbitmq生产者失败error:%+v",err))
+		panic(fmt.Errorf("初始化rabbitmq生产者失败error:%+v", err))
 	}
 	return pool
 })
@@ -36,7 +37,7 @@ var GetRabbitConsumerPool = sync.OnceValue[*rabbitMQ.RabbitMQPool](func() *rabbi
 		config.GetConf().Rabbitmq.VirtualHost,
 	)
 	if err != nil {
-		panic(fmt.Errorf("初始化rabbitmq消费者失败error:%+v",err))
+		panic(fmt.Errorf("初始化rabbitmq消费者失败error:%+v", err))
 	}
 	return pool
 })
