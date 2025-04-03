@@ -32,6 +32,7 @@ func (m *manager) pushBlacklistToProxyGateWay(ctx context.Context) {
 			)
 			if err != nil {
 				log.Error("[定时任务scheduled_tasks]定时执行推送域名黑名单到网关获取域名黑名单错误", zap.Any("error", err))
+				continue
 			}
 
 			if err := service.PushDomainBackList(

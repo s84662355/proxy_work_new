@@ -63,7 +63,7 @@ func Recover(msg string, fields ...zap.Field) {
 
 	err := recover()
 	if err != nil {
-		zaploger.Panic(msg, zap.Any("recover", err), zap.Any("debug.Stack", string(debug.Stack())))
+		zaploger.Fatal(msg, zap.Any("recover", err), zap.Any("debug.Stack", string(debug.Stack())))
 	}
 }
 
