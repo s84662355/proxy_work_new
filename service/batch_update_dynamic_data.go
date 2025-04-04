@@ -76,7 +76,7 @@ func BatchUpdateDynamicDataCachebyRedisPipe(
 	return fmt.Errorf("使用redis管道批量设置主帐号缓存 error:%+v", err)
 }
 
-// / 使用redis管道设置主帐号缓存
+// / 使用设置主帐号缓存
 func UpdateDynamicDataCachebyRedisPipe(
 	ctx context.Context,
 	db *gorm.DB,
@@ -89,28 +89,21 @@ func UpdateDynamicDataCachebyRedisPipe(
 		Where("user_id = ?", UserID).
 		First(v).
 		Error; err != nil {
-		return fmt.Errorf("更新主账号缓存 查询数据失败 error:%+v", err)
+		return fmt.Errorf("使用设置主帐号缓存 查询数据失败 error:%+v", err)
 	}
 
 	data, err := json.Marshal(v)
 	if err != nil {
-		return fmt.Errorf("更新主账号缓存 json.Marshal error:%+v", err)
+		return fmt.Errorf("使用设置主帐号缓存 json.Marshal error:%+v", err)
 	}
 
-	if _, err := rdb.Pipelined(
+	if _, err := rdb.Set(
 		ctx,
-		func(pipe redis.Pipeliner) error {
-			s := string(data)
-			pipe.Set(
-				ctx,
-				fmt.Sprintf("%s%d", constant.VsIPTransitDynamicCacheRedisKeyPrefix, v.UserID),
-				s,
-				constant.VsIPTransitDynamicCacheRedisTtl,
-			)
-
-			return nil
-		}); err != nil {
-		return fmt.Errorf("使用redis管道设置主帐号缓存 error:%+v", err)
+		fmt.Sprintf("%s%d", constant.VsIPTransitDynamicCacheRedisKeyPrefix, v.UserID),
+		string(data),
+		constant.VsIPTransitDynamicCacheRedisTtl,
+	).Result(); err != nil {
+		return fmt.Errorf("使用设置主帐号缓存  error:%+v", err)
 	}
 
 	return nil
