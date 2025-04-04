@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 	"mproxy/common"
 	"mproxy/dao"
 	"mproxy/log"
@@ -26,48 +27,65 @@ func (m *manager) updateVsIpFlowRecordsPartition(
 			return
 		case <-ticker.C:
 			log.Info("[定时任务scheduled_tasks]定时执行删除流量表分区和新增分区开始")
-			m.updateVsIpFlowRecordsPartitionAction()
+			m.updateVsIpFlowRecordsPartitionAction(
+				common.GetMysqlDB(),
+			)
 		}
 	}
 }
 
 // 时执行删除流量表分区和新增分区
-func (m *manager) updateVsIpFlowRecordsPartitionAction() {
+func (m *manager) updateVsIpFlowRecordsPartitionAction(
+	db *gorm.DB,
+) {
 	// 获取现在的时间
 	timeDate := time.Now()
 
 	{
 		// 创建今天的分区
-		m.createFlowRecordsPartition(timeDate)
+		m.createFlowRecordsPartition(
+			timeDate,
+			db,
+		)
 	}
 
 	{
 		// 创建明天的分区
 		timeDate = timeDate.AddDate(0, 0, 1)
-		m.createFlowRecordsPartition(timeDate)
+		m.createFlowRecordsPartition(
+			timeDate,
+			db,
+		)
 	}
 
 	{
 		// 创建后天的分区
 		timeDate = timeDate.AddDate(0, 0, 1)
-		m.createFlowRecordsPartition(timeDate)
+		m.createFlowRecordsPartition(
+			timeDate,
+			db,
+		)
 	}
 
 	{
 		// 删除7天前的分区
 		m.deleteFlowRecordsPartition(
 			time.Now().AddDate(0, 0, -7),
+			db,
 		)
 	}
 }
 
 // 创建分区
-func (m *manager) createFlowRecordsPartition(t time.Time) {
+func (m *manager) createFlowRecordsPartition(
+	t time.Time,
+	db *gorm.DB,
+) {
 	// 按照 "20060102" 格式格式化当前时间，得到今天的日期
 	partitionName := fmt.Sprintf("p%s", t.Format("20060102"))
 	exists, err := dao.CheckPartitionExists(
 		context.Background(),
-		common.GetMysqlDB(),
+		db,
 		model.VsIPFlowRecordsTableName,
 		partitionName,
 	)
@@ -81,7 +99,7 @@ func (m *manager) createFlowRecordsPartition(t time.Time) {
 		lastSecondOfToday := time.Date(year, month, day, 23, 59, 59, 0, t.Location())
 		err := dao.CreateRangePartition(
 			context.Background(),
-			common.GetMysqlDB(),
+			db,
 			model.VsIPFlowRecordsTableName,
 			partitionName,
 			lastSecondOfToday.Unix(),
@@ -94,12 +112,15 @@ func (m *manager) createFlowRecordsPartition(t time.Time) {
 	}
 }
 
-func (m *manager) deleteFlowRecordsPartition(t time.Time) {
+func (m *manager) deleteFlowRecordsPartition(
+	t time.Time,
+	db *gorm.DB,
+) {
 	// 按照 "20060102" 格式格式化当前时间，得到今天的日期
 	partitionName := fmt.Sprintf("p%s", t.Format("20060102"))
 	exists, err := dao.CheckPartitionExists(
 		context.Background(),
-		common.GetMysqlDB(),
+		db,
 		model.VsIPFlowRecordsTableName,
 		partitionName,
 	)
@@ -110,7 +131,7 @@ func (m *manager) deleteFlowRecordsPartition(t time.Time) {
 	if exists {
 		err := dao.DeleteRangePartition(
 			context.Background(),
-			common.GetMysqlDB(),
+			db,
 			model.VsIPFlowRecordsTableName,
 			partitionName,
 		)
