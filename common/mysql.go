@@ -26,6 +26,5 @@ var GetMysqlDB = sync.OnceValue[*gorm.DB](func() *gorm.DB {
 	sqlDB.SetMaxOpenConns(config.GetConf().Mysql.MaxOpenConns)
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
 	sqlDB.SetConnMaxLifetime(time.Duration(config.GetConf().Mysql.SetConnMaxLifetime) * time.Second)
-
 	return db
 })
