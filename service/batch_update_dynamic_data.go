@@ -27,7 +27,7 @@ func BatchUpdateDynamicDataCache(
 		constant.BatchUpdateDynamicDataCacheSize,
 		func(tx *gorm.DB, batch int) error {
 			for c := range slices.Chunk(results, 20) {
-				if err := UpdateDynamicDataCachebyRedisPipe(
+				if err := BatchUpdateDynamicDataCachebyRedisPipe(
 					ctx,
 					rdb,
 					c,
@@ -41,8 +41,8 @@ func BatchUpdateDynamicDataCache(
 	return result.RowsAffected, result.Error
 }
 
-// / 使用redis管道设置主帐号缓存
-func UpdateDynamicDataCachebyRedisPipe(
+// 使用redis管道批量设置主帐号缓存
+func BatchUpdateDynamicDataCachebyRedisPipe(
 	ctx context.Context,
 	rdb *redis.Client,
 	results []*model.VsIPTransitDynamic,
@@ -53,7 +53,7 @@ func UpdateDynamicDataCachebyRedisPipe(
 			for _, v := range results {
 				data, err := json.Marshal(v)
 				if err != nil {
-					log.Error("[service]使用redis管道设置主帐号缓存 json解析失败", zap.Any("error", err), zap.Any("data", data))
+					log.Error("[service]使用redis管道批量设置主帐号缓存 json解析失败", zap.Any("error", err), zap.Any("data", data))
 
 					continue
 				}
@@ -73,5 +73,45 @@ func UpdateDynamicDataCachebyRedisPipe(
 		return nil
 	}
 
-	return fmt.Errorf("使用redis管道设置主帐号缓存 error:%+v", err)
+	return fmt.Errorf("使用redis管道批量设置主帐号缓存 error:%+v", err)
+}
+
+// / 使用redis管道设置主帐号缓存
+func UpdateDynamicDataCachebyRedisPipe(
+	ctx context.Context,
+	db *gorm.DB,
+	rdb *redis.Client,
+	UserID int64,
+) error {
+	v := &model.VsIPTransitDynamic{}
+	if err := db.
+		WithContext(ctx).
+		Where("user_id = ?", UserID).
+		First(v).
+		Error; err != nil {
+		return fmt.Errorf("更新主账号缓存 查询数据失败 error:%+v", err)
+	}
+
+	data, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("更新主账号缓存 json.Marshal error:%+v", err)
+	}
+
+	if _, err := rdb.Pipelined(
+		ctx,
+		func(pipe redis.Pipeliner) error {
+			s := string(data)
+			pipe.Set(
+				ctx,
+				fmt.Sprintf("%s%d", constant.VsIPTransitDynamicCacheRedisKeyPrefix, v.UserID),
+				s,
+				constant.VsIPTransitDynamicCacheRedisTtl,
+			)
+
+			return nil
+		}); err != nil {
+		return fmt.Errorf("使用redis管道设置主帐号缓存 error:%+v", err)
+	}
+
+	return nil
 }

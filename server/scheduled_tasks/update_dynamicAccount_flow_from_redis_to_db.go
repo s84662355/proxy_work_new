@@ -72,7 +72,18 @@ func (m *manager) updateDynamicAccountFlowFromRedisToDB(ctx context.Context) {
 							num,
 						)
 						if err != nil {
-							log.Error("[定时任务scheduled_tasks]把子账号的流量从redis同步到MySQL更新子账号错误", zap.Any("error", err))
+							log.Error("[定时任务scheduled_tasks]把子账号的流量从redis同步到MySQL更新子账号错误", zap.Any("accountId", num), zap.Any("error", err))
+							return
+						}
+
+						///更新子账号缓存
+						if err := service.UpdateDynamicAccountDataCachebyRedisPipe(
+							context.Background(),
+							common.GetMysqlDB(),
+							common.GetRedisDB(),
+							num,
+						); err != nil {
+							log.Error("[定时任务scheduled_tasks]更新子账号缓存错误", zap.Any("accountId", num), zap.Any("error", err))
 						}
 					})
 				}

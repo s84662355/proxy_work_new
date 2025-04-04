@@ -28,7 +28,7 @@ func BatchUpdateDynamicAccountDataCache(
 		func(tx *gorm.DB, batch int) error {
 			for c := range slices.Chunk(results, 20) {
 				///设置 DynamicAccount 缓存
-				if err := UpdateDynamicAccountDataCachebyRedisPipe(ctx, rdb, c); err != nil {
+				if err := BatchUpdateDynamicAccountDataCachebyRedisPipe(ctx, rdb, c); err != nil {
 					log.Error("[service]批量更新子账号缓存 设置数据执行错误", zap.Any("error", err))
 				}
 
@@ -44,7 +44,7 @@ func BatchUpdateDynamicAccountDataCache(
 }
 
 // 使用redis管道批量设置子账号缓存
-func UpdateDynamicAccountDataCachebyRedisPipe(
+func BatchUpdateDynamicAccountDataCachebyRedisPipe(
 	ctx context.Context,
 	rdb *redis.Client,
 	results []*model.VsIPTransitDynamicAccount,
@@ -72,7 +72,6 @@ func UpdateDynamicAccountDataCachebyRedisPipe(
 						s,
 						constant.DynamicAccountDataCacheRedisTtl,
 					)
-
 				}
 			}
 			return nil
@@ -83,6 +82,54 @@ func UpdateDynamicAccountDataCachebyRedisPipe(
 	}
 
 	return fmt.Errorf("使用redis管道批量设置子账号缓存 error:%+v", err)
+}
+
+// 更新单个子账号缓存使用redis管道
+func UpdateDynamicAccountDataCachebyRedisPipe(
+	ctx context.Context,
+	db *gorm.DB,
+	rdb *redis.Client,
+	accountId int64,
+) error {
+	v := &model.VsIPTransitDynamicAccount{}
+	if err := db.
+		WithContext(ctx).
+		Model(&model.VsIPTransitDynamicAccount{}).
+		First(v, accountId).Error; err != nil {
+		return fmt.Errorf("更新子账号缓存 查询账号数据 error:%+v", err)
+	}
+
+	accountData, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("更新子账号缓存 json.Marshal error:%+v", err)
+	}
+
+	{
+		_, err := rdb.Pipelined(
+			ctx,
+			func(pipe redis.Pipeliner) error {
+				s := string(accountData)
+				pipe.Set(
+					ctx,
+					constant.DynamicAccountDataCacheRedisKeyPrefix+v.Username,
+					s,
+					constant.DynamicAccountDataCacheRedisTtl,
+				)
+				pipe.Set(
+					ctx,
+					fmt.Sprintf("%s%d", constant.DynamicAccountDataCacheByIdRedisKeyPrefix, v.ID),
+					s,
+					constant.DynamicAccountDataCacheRedisTtl,
+				)
+
+				return nil
+			})
+		if err != nil {
+			return fmt.Errorf("更新子账号缓存  rdb.Pipelined error:%+v", err)
+		}
+	}
+
+	return nil
 }
 
 // 使用redis管道批量判断子账号的流量是否存在

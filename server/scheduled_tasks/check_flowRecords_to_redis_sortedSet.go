@@ -132,6 +132,16 @@ func (m *manager) updateFlowAndAutoBuyFlow(
 		return
 	}
 
+	///更新主账号缓存
+	if err := service.UpdateDynamicDataCachebyRedisPipe(
+		context.Background(),
+		common.GetMysqlDB(),
+		common.GetRedisDB(),
+		userId,
+	); err != nil {
+		log.Error("[定时任务scheduled_tasks]更新主账号流量并且主动购买流量错误", zap.Int64("userId", userId), zap.Any("error", err))
+	}
+
 	if !common.GetRedisDB().
 		SetNX(
 			context.Background(),
@@ -141,6 +151,7 @@ func (m *manager) updateFlowAndAutoBuyFlow(
 		).Val() {
 		return
 	}
+	// 自动购买流量
 	if _, err := service.DynamicFlowAndAutoBuy(
 		context.Background(),
 		common.GetMysqlDB(),
